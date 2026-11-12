@@ -1,0 +1,10 @@
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Configuraciones locales del editor
+.vscode/
+.idea/
+
+# Archivos temporales de PHP
+*.log
