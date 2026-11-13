@@ -1,4 +1,9 @@
 <?php
+session_start();
+if (!isset($_SESSION['usuario_id']) || $_SESSION['usuario_rol'] != 'admin') {
+    header("Location: index.php"); // Si no es admin, lo patea al inicio
+    exit;
+}
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require 'includes/conexion.php';
 
