@@ -1,9 +1,4 @@
 <?php
-session_start();
-if (!isset($_SESSION['usuario_id']) || $_SESSION['usuario_rol'] != 'admin') {
-    header("Location: index.php"); // Si no es admin, lo patea al inicio
-    exit;
-}
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require 'includes/conexion.php';
 
@@ -24,7 +19,8 @@ $res_mes = $conn->query("SELECT SUM(total) as total FROM ventas WHERE DATE_FORMA
 $ventas_mes = $res_mes->fetch_assoc();
 
 // --- CONSULTAS PARA PRODUCTOS MÁS VENDIDOS ---
-// Top 5 de siempre
+
+// Top 5 de siempre (Histórico)
 $top_productos = $conn->query("
     SELECT p.nombre, SUM(v.cantidad) as total_vendido 
     FROM ventas v 
@@ -48,7 +44,6 @@ require 'includes/header.php';
 
 <div style="text-align: center; margin-bottom: 30px;">
     <h2 style="color: var(--rosa-oscuro);">📊 Estadísticas de La Soleil</h2>
-    <a href="index.php" class="btn" style="background: #8d6e63;">Volver al Menú</a>
 </div>
 
 <!-- TARJETAS DE RESUMEN -->
@@ -58,7 +53,7 @@ require 'includes/header.php';
     <div class="card" style="padding: 20px; text-align: center; border-left: 5px solid #ff69b4;">
         <h3 style="margin: 0; color: #666; font-size: 1em;">Ventas de Hoy</h3>
         <p style="font-size: 2em; font-weight: bold; color: #ff69b4; margin: 10px 0;">Bs <?php echo number_format($ventas_hoy['total'] ?? 0, 2, ',', '.'); ?></p>
-        <small style="color: #888;"><?php echo $ventas_hoy['transacciones']; ?> pedidos realizados</small>
+        <small style="color: #888;"><?php echo $ventas_hoy['transacciones'] ?? 0; ?> pedidos realizados</small>
     </div>
 
     <!-- Tarjeta Semana -->
@@ -98,7 +93,7 @@ require 'includes/header.php';
     </tr>
     <?php 
     $puesto = 1;
-    if ($top_productos->num_rows > 0):
+    if ($top_productos && $top_productos->num_rows > 0):
         while($row = $top_productos->fetch_assoc()): 
     ?>
     <tr>
