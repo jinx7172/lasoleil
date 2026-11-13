@@ -235,18 +235,21 @@ if(isset($_SESSION['carrito'])) {
 </script>
 
 <!-- HEADER PRINCIPAL -->
-<header style="padding: 10px 20px; position: relative;">
-    <!-- Enlace al inicio con el logo -->
+<header style="padding: 15px 20px; position: relative; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 20px;">
+    
+    <!-- Logo más grande y centrado -->
     <a href="index.php" style="text-decoration: none; display: inline-block;">
-        <img src="assets/img/logo.png" alt="La Soleil" style="height: 180px; width: auto; margin: -20px 0; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        <img src="assets/img/logo.png" alt="La Soleil" style="height: 220px; width: auto; transition: transform 0.3s; margin: -30px 0;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
     </a>
     
-    <div class="header-btns" style="top: 50%; transform: translateY(-50%);">
-        <a href="estadisticas.php" class="btn-header">📊 Stats</a>
-        <a href="inventario.php" class="btn-header">🥣 Inventario</a>
-        <a href="admin.php" class="btn-header">➕ Nuevo</a>
-        <a href="editar.php" class="btn-header">🛠️ Panel</a>
-        <a href="carrito.php" class="btn-header">🛒 Carrito (<?php echo $total_items; ?>)</a>
+    <!-- Botones con estilo de pestañas elegantes -->
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center;">
+        <a href="index.php" class="btn-header" style="background: white; color: var(--rosa-oscuro); padding: 10px 20px; border-radius: 30px; font-weight: bold; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.3s;">🏠 Inicio</a>
+        <a href="estadisticas.php" class="btn-header" style="background: white; color: var(--rosa-oscuro); padding: 10px 20px; border-radius: 30px; font-weight: bold; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.3s;">📊 Stats</a>
+        <a href="inventario.php" class="btn-header" style="background: white; color: var(--rosa-oscuro); padding: 10px 20px; border-radius: 30px; font-weight: bold; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.3s;">🥣 Inventario</a>
+        <a href="admin.php" class="btn-header" style="background: white; color: var(--rosa-oscuro); padding: 10px 20px; border-radius: 30px; font-weight: bold; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.3s;">➕ Nuevo</a>
+        <a href="editar.php" class="btn-header" style="background: white; color: var(--rosa-oscuro); padding: 10px 20px; border-radius: 30px; font-weight: bold; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.3s;">🛠️ Panel</a>
+        <a href="carrito.php" class="btn-header" style="background: var(--rosa-oscuro); color: white; padding: 10px 20px; border-radius: 30px; font-weight: bold; text-decoration: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.3s;">🛒 Carrito (<?php echo $total_items; ?>)</a>
     </div>
 </header>
 
