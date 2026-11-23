@@ -1,10 +1,15 @@
 # Archivos de sistema
 .DS_Store
 Thumbs.db
+ehthumbs.db
+desktop.ini
 
 # Configuraciones locales del editor
 .vscode/
 .idea/
 
-# Archivos temporales de PHP
+# Archivos temporales y de despliegue
 *.log
+*.zip
+*.tar.gz
+*.bak

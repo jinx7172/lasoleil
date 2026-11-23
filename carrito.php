@@ -47,41 +47,51 @@ if (isset($_GET['vaciar'])) {
 require 'includes/header.php';
 ?>
 
-<h2 style="color: var(--rosa-oscuro);">🛒 Tu Carrito</h2>
+<h2 style="color: var(--rosa-oscuro); text-align: center; margin-bottom: 20px;">🛒 Tu Carrito</h2>
 
 <?php if (!empty($_SESSION['carrito'])): ?>
-    <table>
-        <tr><th>Producto</th><th>Precio</th><th>Cantidad</th><th>Subtotal</th><th>Acción</th></tr>
-        <?php 
-        $total = 0;
-        foreach ($_SESSION['carrito'] as $id => $prod): 
-            $subtotal = $prod['precio'] * $prod['cantidad'];
-            $total += $subtotal;
-        ?>
-        <tr>
-            <td><?php echo htmlspecialchars($prod['nombre']); ?></td>
-            <td>Bs <?php echo number_format($prod['precio'], 2, ',', '.'); ?></td>
-            
-            <!-- CONTROLES DE CANTIDAD -->
-            <td>
-                <div style="display: flex; align-items: center; gap: 10px; justify-content: center;">
-                    <a href="carrito.php?restar=<?php echo $id; ?>" class="btn" style="padding: 2px 10px; background: #8d6e63; font-size: 1.2em; border-radius: 50%;">-</a>
-                    <strong style="font-size: 1.1em;"><?php echo $prod['cantidad']; ?></strong>
-                    <a href="carrito.php?sumar=<?php echo $id; ?>" class="btn" style="padding: 2px 10px; background: #ff69b4; font-size: 1.2em; border-radius: 50%;">+</a>
-                </div>
-            </td>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr><th>Producto</th><th>Precio</th><th style="text-align: center;">Cantidad</th><th>Subtotal</th><th style="text-align: center;">Acción</th></tr>
+            </thead>
+            <tbody>
+                <?php 
+                $total = 0;
+                foreach ($_SESSION['carrito'] as $id => $prod): 
+                    $subtotal = $prod['precio'] * $prod['cantidad'];
+                    $total += $subtotal;
+                ?>
+                <tr>
+                    <td><strong><?php echo htmlspecialchars($prod['nombre']); ?></strong></td>
+                    <td style="color: var(--rosa-oscuro); font-weight: bold;">Bs <?php echo number_format($prod['precio'], 2, ',', '.'); ?></td>
+                    
+                    <!-- CONTROLES DE CANTIDAD -->
+                    <td style="text-align: center;">
+                        <div style="display: inline-flex; align-items: center; gap: 8px; justify-content: center; background: #fff5f8; padding: 4px 10px; border-radius: 20px; border: 1px solid #ffd1dc;">
+                            <a href="carrito.php?restar=<?php echo $id; ?>" class="btn" style="padding: 2px 8px; background: #8d6e63; font-size: 1rem; border-radius: 50%; width: 26px; height: 26px; text-decoration: none;">-</a>
+                            <strong style="font-size: 1.05rem; min-width: 20px; text-align: center;"><?php echo $prod['cantidad']; ?></strong>
+                            <a href="carrito.php?sumar=<?php echo $id; ?>" class="btn" style="padding: 2px 8px; background: #ff69b4; font-size: 1rem; border-radius: 50%; width: 26px; height: 26px; text-decoration: none;">+</a>
+                        </div>
+                    </td>
 
-            <td>Bs <?php echo number_format($subtotal, 2, ',', '.'); ?></td>
-            <td><a href="carrito.php?eliminar=<?php echo $id; ?>" class="btn" style="background:red; padding: 5px 10px;">X</a></td>
-        </tr>
-        <?php endforeach; ?>
-    </table>
+                    <td style="font-weight: bold;">Bs <?php echo number_format($subtotal, 2, ',', '.'); ?></td>
+                    <td style="text-align: center;">
+                        <a href="carrito.php?eliminar=<?php echo $id; ?>" class="btn" style="background:#dc3545; padding: 5px 10px; font-size: 0.85rem;" title="Eliminar del carrito">🗑️</a>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
     
-    <div style="text-align: right; margin-top: 20px;">
-        <h3>Total: Bs <?php echo number_format($total, 2, ',', '.'); ?></h3>
-        <a href="index.php" class="btn" style="background: #8d6e63;">Seguir Comprando</a>
-        <a href="carrito.php?vaciar=true" class="btn" style="background: red;">Vaciar Carrito</a>
-        <a href="procesar_pago.php" class="btn" style="background: #32cd32;">Finalizar Compra (PDF)</a>
+    <div style="text-align: right; margin-top: 20px; display: flex; flex-direction: column; align-items: flex-end; gap: 15px;">
+        <h3 style="color: var(--rosa-oscuro); font-size: 1.4rem;">Total a Pagar: <span style="color: var(--rosa-acento);">Bs <?php echo number_format($total, 2, ',', '.'); ?></span></h3>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; width: 100%;">
+            <a href="index.php" class="btn" style="background: #8d6e63;">⬅️ Seguir Comprando</a>
+            <a href="carrito.php?vaciar=true" class="btn" style="background: #dc3545;" onclick="return confirm('¿Estás seguro de vaciar el carrito?');">🗑️ Vaciar Carrito</a>
+            <a href="procesar_pago.php" class="btn" style="background: #28a745; font-size: 1.05rem;">💳 Finalizar Compra (PDF)</a>
+        </div>
     </div>
 <?php else: ?>
     <p style="text-align: center; font-size: 1.2em;">Tu carrito está vacío.</p>

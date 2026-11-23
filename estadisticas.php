@@ -85,7 +85,8 @@ require 'includes/header.php';
 
 <!-- TABLA DE LOS MÁS VENDIDOS (TOP 5) -->
 <h3 style="color: var(--rosa-oscuro); border-bottom: 2px solid #ffb6c1; padding-bottom: 10px;">🔥 Top 5 Más Vendidos (Histórico)</h3>
-<table style="margin-top: 20px;">
+<div class="table-responsive" style="margin-top: 20px;">
+<table>
     <tr>
         <th>Puesto</th>
         <th>Producto</th>
@@ -105,5 +106,6 @@ require 'includes/header.php';
     <tr><td colspan="3" style="text-align: center;">Aún no hay ventas registradas.</td></tr>
     <?php endif; ?>
 </table>
+</div>
 
 <?php require 'includes/footer.php'; ?>

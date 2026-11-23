@@ -49,13 +49,11 @@ require 'includes/header.php';
 <?php endif; ?>
 
 <!-- BARRA DE BÚSQUEDA -->
-<div style="text-align: center; margin-bottom: 15px;">
-    <form method="GET" action="index.php" style="display: inline-block; width: 100%; max-width: 500px;">
+<div class="search-container">
+    <form method="GET" action="index.php" class="search-form">
         <input type="hidden" name="cat" value="<?php echo $categoria_actual; ?>">
-        <div style="display: flex; gap: 10px;">
-            <input type="text" name="buscar" value="<?php echo htmlspecialchars($busqueda); ?>" placeholder="Buscar pan, pastel, galleta..." style="flex-grow: 1; padding: 10px; border-radius: 20px; border: 1px solid var(--rosa-fuerte);">
-            <button type="submit" class="btn" style="border-radius: 20px; padding: 10px 20px;">🔍</button>
-        </div>
+        <input type="text" name="buscar" value="<?php echo htmlspecialchars($busqueda); ?>" placeholder="Buscar pan, pastel, galleta..." class="search-input">
+        <button type="submit" class="search-btn">🔍</button>
     </form>
 </div>
 

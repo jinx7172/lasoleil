@@ -87,17 +87,77 @@ if (isset($_POST['agregar_recetas_multiples'])) {
 
 // --- 7. SUMAR STOCK PRODUCTO (FABRICAR) ---
 if (isset($_POST['sumar_stock'])) {
-    $id_prod = $_POST['id_producto'];
+    $id_prod = (int)$_POST['id_producto'];
     $cantidad_prod = (int)$_POST['cantidad'];
-    if ($cantidad_prod > 0) {
-        $conn->query("UPDATE productos SET stock = stock + $cantidad_prod WHERE id = $id_prod");
-        $receta_query = $conn->query("SELECT ingrediente_id, cantidad_necesaria FROM recetas WHERE producto_id = $id_prod");
-        while ($ing = $receta_query->fetch_assoc()) {
-            $ing_id = $ing['ingrediente_id'];
-            $cant_necesaria = $ing['cantidad_necesaria'] * $cantidad_prod; 
-            $conn->query("UPDATE ingredientes SET stock_actual = stock_actual - $cant_necesaria WHERE id = $ing_id");
+    if ($cantidad_prod <= 0) {
+        $error = "❌ La cantidad a fabricar debe ser un número entero mayor a 0.";
+    } else {
+        $p_info = $conn->query("SELECT nombre, stock FROM productos WHERE id = $id_prod")->fetch_assoc();
+        $nombre_prod = $p_info['nombre'] ?? 'Producto';
+
+        // Consultar la receta del producto
+        $r_stmt = $conn->prepare("
+            SELECT r.ingrediente_id, r.cantidad_necesaria, i.nombre, i.stock_actual, i.unidad_medida 
+            FROM recetas r 
+            JOIN ingredientes i ON r.ingrediente_id = i.id 
+            WHERE r.producto_id = ?
+        ");
+        $r_stmt->bind_param("i", $id_prod);
+        $r_stmt->execute();
+        $receta = $r_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        if (empty($receta)) {
+            $error = "⚠️ El producto '<strong>" . htmlspecialchars($nombre_prod) . "</strong>' no tiene receta registrada. Agrega sus ingredientes antes de fabricar existencias.";
+        } else {
+            $max_elaborables = PHP_INT_MAX;
+            $insuficientes = [];
+
+            foreach ($receta as $ing) {
+                $stock_disp = (float)$ing['stock_actual'];
+                $cant_necesaria = (float)$ing['cantidad_necesaria'];
+                $requerido_total = $cant_necesaria * $cantidad_prod;
+
+                $max_este_ing = ($cant_necesaria > 0) ? (int)floor($stock_disp / $cant_necesaria) : PHP_INT_MAX;
+                if ($max_este_ing < $max_elaborables) {
+                    $max_elaborables = $max_este_ing;
+                }
+
+                if ($stock_disp < $requerido_total) {
+                    $faltante = $requerido_total - $stock_disp;
+                    $insuficientes[] = "<strong>" . htmlspecialchars($ing['nombre']) . "</strong> (disponible: " . number_format($stock_disp, 2) . " " . $ing['unidad_medida'] . ", requerido: " . number_format($requerido_total, 2) . " " . $ing['unidad_medida'] . " - falta: " . number_format($faltante, 2) . " " . $ing['unidad_medida'] . ")";
+                }
+            }
+
+            if ($max_elaborables === PHP_INT_MAX) $max_elaborables = 0;
+
+            if (!empty($insuficientes) || $cantidad_prod > $max_elaborables) {
+                $error = "❌ <strong>No se pueden fabricar $cantidad_prod unidades de '" . htmlspecialchars($nombre_prod) . "':</strong><br>" .
+                         "La cantidad supera los ingredientes disponibles en inventario.<br><br>" .
+                         "📊 <strong>Capacidad máxima de producción:</strong> Con los insumos actuales solo se pueden elaborar un máximo de <strong>$max_elaborables</strong> unidad(es).<br><br>" .
+                         "⚠️ <em>Detalle de insumos insuficientes:</em><br>• " . implode("<br>• ", $insuficientes);
+            } else {
+                $conn->begin_transaction();
+                try {
+                    $upd_ing = $conn->prepare("UPDATE ingredientes SET stock_actual = stock_actual - ? WHERE id = ?");
+                    foreach ($receta as $ing) {
+                        $descontar = (float)$ing['cantidad_necesaria'] * $cantidad_prod;
+                        $id_ing = (int)$ing['ingrediente_id'];
+                        $upd_ing->bind_param("di", $descuento, $id_ing);
+                        $upd_ing->execute();
+                    }
+
+                    $upd_prod = $conn->prepare("UPDATE productos SET stock = stock + ? WHERE id = ?");
+                    $upd_prod->bind_param("ii", $cantidad_prod, $id_prod);
+                    $upd_prod->execute();
+
+                    $conn->commit();
+                    $mensaje = "✅ ¡Se fabricaron con éxito <strong>$cantidad_prod</strong> unidades de '" . htmlspecialchars($nombre_prod) . "' y se descontaron los insumos según su receta!";
+                } catch (Exception $e) {
+                    $conn->rollback();
+                    $error = "Error al procesar la fabricación: " . $e->getMessage();
+                }
+            }
         }
-        $mensaje = "Se fabricaron $cantidad_prod productos y se descontaron ingredientes.";
     }
 }
 
@@ -126,6 +186,7 @@ require 'includes/header.php';
 
 <?php if(isset($mensaje)) echo "<div style='background:#d4edda; color:#155724; padding:10px; border-radius:5px; text-align:center; margin-bottom:15px;'>$mensaje</div>"; ?>
 <?php if(isset($mensaje_receta)) echo "<div style='background:#d4edda; color:#155724; padding:10px; border-radius:5px; text-align:center; margin-bottom:15px;'>$mensaje_receta</div>"; ?>
+<?php if(isset($error)) echo "<div style='background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; padding:12px; border-radius:5px; text-align:center; margin-bottom:15px;'>$error</div>"; ?>
 
 <!-- BOTONES PARA CAMBIAR DE VISTA -->
 <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;">
@@ -178,6 +239,7 @@ require 'includes/header.php';
     </div>
 
     <h3 style="color: var(--rosa-oscuro); border-bottom: 2px solid var(--rosa-fuerte); padding-bottom: 10px;">Stock Actual de Ingredientes</h3>
+    <div class="table-responsive">
     <table>
         <tr><th>Ingrediente</th><th>Stock Actual</th><th>Estado</th><th>Añadir Stock</th><th>Acciones</th></tr>
         <?php while($ing = $ingredientes->fetch_assoc()): 
@@ -205,6 +267,7 @@ require 'includes/header.php';
         </tr>
         <?php endwhile; ?>
     </table>
+    </div>
 </div>
 
 <!-- MODAL PARA EDITAR INGREDIENTE -->
@@ -328,6 +391,7 @@ require 'includes/header.php';
 
     <!-- Fabricación -->
     <h3 style="color: var(--rosa-oscuro); border-bottom: 2px solid var(--rosa-fuerte); padding-bottom: 10px;">Fabricar / Reponer Productos</h3>
+    <div class="table-responsive">
     <table>
         <tr><th>Producto</th><th>Stock Actual</th><th>Añadir Producción</th></tr>
         <?php foreach($productos_array as $pf): ?>
@@ -344,6 +408,7 @@ require 'includes/header.php';
         </tr>
         <?php endforeach; ?>
     </table>
+    </div>
 </div>
 
 <!-- MODAL PARA EDITAR RECETA COMPLETA -->
@@ -451,11 +516,11 @@ require 'includes/header.php';
         const contenedor = document.getElementById('contenedor-ingredientes-edit');
         
         const nuevaFila = document.createElement('div');
-        nuevaFila.style = 'display: flex; gap: 10px; margin-bottom: 10px;';
+        nuevaFila.style = 'display: flex; gap: 8px; margin-bottom: 10px; width: 100%; box-sizing: border-box; align-items: center;';
         
         const select = document.createElement('select');
         select.name = 'ingredientes_edit[]';
-        select.style = 'flex-grow: 1; padding: 8px; border-radius: 5px; border: 1px solid #ccc;';
+        select.style = 'flex: 2; min-width: 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc;';
         select.innerHTML = opcionesIngredientes;
         select.value = ing_id_seleccionado; 
 
@@ -465,14 +530,14 @@ require 'includes/header.php';
         input.name = 'cantidades_edit[]';
         input.placeholder = 'Cantidad';
         input.value = cantidad;
-        input.style = 'width: 120px; padding: 8px; border-radius: 5px; border: 1px solid #ccc;';
+        input.style = 'flex: 1; max-width: 110px; min-width: 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc;';
         input.required = true;
 
         const btnEliminar = document.createElement('button');
         btnEliminar.type = 'button'; 
-        btnEliminar.innerText = 'X';
+        btnEliminar.innerText = '🗑️';
         btnEliminar.className = 'btn'; 
-        btnEliminar.style = 'background: red; padding: 8px 12px;';
+        btnEliminar.style = 'background: #ff4d4d; color: white; width: 36px; height: 36px; min-width: 36px; padding: 0; border: none; border-radius: 6px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;';
         btnEliminar.onclick = function() { nuevaFila.remove(); };
         
         nuevaFila.appendChild(select);
